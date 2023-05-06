@@ -6,15 +6,12 @@ import pickle
 from streamlit import config
 import style_transfer_functions
 
+st.set_page_config(page_title="Style Transfer - DLOps", page_icon="😎")
+
 st.sidebar.title("Configurations")
 st.title("Style Transfer using Different Architectures")
 
 ## Sidebar
-with st.sidebar.expander("About the App"):
-     st.write("""
-        Use this simple app to convert your normal Images into different styles.\nUpload an Image that you want to transform, and another Image which is the Style reference. What you get as a result is the original image stylized according to the reference style Image.\n\nThis app was created by Soumik, Yash and Stuti as a part of the DLOps project for the course CSL4020: Deep Learning offered at IIT Jodhpur during Jan-May 2023.
-     """)
-
 st.sidebar.header("Select Model Architecture")
 model_options = {
     'Variational AE': 1,
@@ -24,6 +21,10 @@ model_options = {
 }
 selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
 
+with st.sidebar.expander("About the App"):
+     st.write("""
+        Use this simple app to convert your normal Images into different styles.\nUpload an Image that you want to transform, and another Image which is the Style reference. What you get as a result is the original image stylized according to the reference style Image.\n\nThis app was created by Soumik, Yash and Stuti as a part of the DLOps project for the course CSL4020: Deep Learning offered at IIT Jodhpur during Jan-May 2023.
+     """)
 
 ## Main Content
 st.subheader('Upload your Image and Style Reference')
