@@ -11,7 +11,8 @@ model_vae = style_transfer_functions.VAE()
 st.sidebar.title("Configurations")
 st.title("Style Transfer using Different Architectures")
 
-## Sidebar
+###### SIDEBAR  #######
+
 with st.sidebar.expander("About the App"):
      st.write("""
         Use this simple app to convert your normal Images into different styles.\nUpload an Image that you want to transform, and another Image which is the Style reference. What you get as a result is the original image stylized according to the reference style Image.\n\nThis app was created by Soumik, Yash and Stuti as a part of the DLOps project for the course CSL4020: Deep Learning offered at IIT Jodhpur during Jan-May 2023.
@@ -28,12 +29,14 @@ model_options = {
 selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
 
 
-## Main Content
+###### MAIN CONTENT  #######
+
+output_img_warning = None
+output_img_error = None
+
 st.subheader('Upload your Image and Style Reference')
 content_file = st.file_uploader("Image to Style", type=['jpg','png','jpeg'])
 stlye_file = st.file_uploader("Style Reference Image", type=['jpg','png','jpeg'])
-
-#Add 'Original' and 'Style' columns
 
 cont_img = None
 style_img = None
@@ -46,16 +49,6 @@ if content_file is not None or stlye_file is not None:
         if content_file is not None:
             cont_img = Image.open(content_file)
             st.image(cont_img,width=300)  
-            # st.write(
-            #     image_to_url(
-            #         image=cont_img,
-            #         width=300,
-            #         clamp=False,
-            #         channels="RGB",
-            #         output_format="auto",
-            #         image_id=,  # each uploaded file has a file.id
-            #     )
-            # )
 
     with col2:
         st.markdown('<p style="text-align: center;">Style Reference</p>',unsafe_allow_html=True)
@@ -70,15 +63,19 @@ if st.button("Transform"):
         st.error("Please upload both the images")
         st.stop()
     else:
-        st.warning('Transforming Image')
         # picklefile = open("vae_model.pkl", "rb")
         model = model_options[selected_model]
         # pickle.load(picklefile)
         if model!=None:
-            transformed_img = model.transform_image(cont_img, style_img)
+            with st.spinner("Adding style✨ to you image ..."):
+                transformed_img = model.transform_image(cont_img, style_img)
         else:
-            st.error("Model not available yet, we're trying our best to get it running..,")
+            st.error("Model not available yet, we're trying our best to get it running..")
+        transforming = False
         # picklefile.close()
+
+
+
 
 if transformed_img is not None:
     st.subheader('Transformed Image')
