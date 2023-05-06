@@ -1,54 +1,79 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+from  PIL import Image, ImageEnhance
 import pickle
+from streamlit import config
+import style_transfer_functions
 
-app_mode = st.sidebar.selectbox('Select Page',['Home','Predict_Churn'])
+st.sidebar.title("Configurations")
+st.title("Style Transfer using Different Architectures")
 
-if app_mode=='Home': 
-    st.title('Employee Prediction') 
-    st.markdown('Dataset :') 
-    # df=pd.read_csv('emp_analytics.csv') #Read our data dataset
-    # st.write(df.head()) 
+## Sidebar
+with st.sidebar.expander("About the App"):
+     st.write("""
+        Use this simple app to convert your normal Images into different styles.\nUpload an Image that you want to transform, and another Image which is the Style reference. What you get as a result is the original image stylized according to the reference style Image.\n\nThis app was created by Soumik, Yash and Stuti as a part of the DLOps project for the course CSL4020: Deep Learning offered at IIT Jodhpur during Jan-May 2023.
+     """)
+
+st.sidebar.header("Select Model Architecture")
+model_options = {
+    'Variational AE': 1,
+    'Tranformer' : 2,
+    'Styl-GAN' : 3,
+    'Pics-Art API' : 4,
+}
+selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
 
 
-elif app_mode == 'Predict_Churn':
-## specify our inputs
-    st.subheader('Fill in employee details to get prediction ')
-    st.sidebar.header("Other details :")
-    prop = {'salary_low': 1, 'salary_high': 2, 'salary_medium': 3}
-    satisfaction_level = st.number_input("satisfaction_level", min_value=0.0, max_value=1.0)
-    average_montly_hours = st.number_input("average_montly_hours")
-    promotion_last_5year = st.number_input("promotion_last_5year")
-    salary = st.sidebar.radio("Select Salary ",tuple(prop.keys()))
+## Main Content
+st.subheader('Upload your Image and Style Reference')
+content_file = st.file_uploader("Image to Style", type=['jpg','png','jpeg'])
+stlye_file = st.file_uploader("Style Reference Image", type=['jpg','png','jpeg'])
 
-    salary_low,salary_medium,salary_high=0,0,0
-    if salary == 'salary_high':
-        salary_high = 1
-    elif salary == 'salary_low':
-        salary_low = 1
-    else :salary_medium = 0
+#Add 'Original' and 'Style' columns
 
-    subdata={
-        'satisfaction_level':satisfaction_level,
-        'average_montly_hours ':average_montly_hours ,
-        'promotion_last_5year':   promotion_last_5year,
-        'salary':[salary_low,salary_medium,salary_high],
-        }
+cont_img = None
+style_img = None
 
-    features = [satisfaction_level, average_montly_hours, promotion_last_5year, subdata['salary'][0],subdata['salary'][1], subdata['salary'][2]]
+if content_file is not None or stlye_file is not None:
+    
+    col1, col2 = st.columns( [0.5, 0.5])
+    with col1:
+        st.markdown('<p style="text-align: center;">Original</p>',unsafe_allow_html=True)
+        if content_file is not None:
+            cont_img = Image.open(content_file)
+            st.image(cont_img,width=300)  
+            # st.write(
+            #     image_to_url(
+            #         image=cont_img,
+            #         width=300,
+            #         clamp=False,
+            #         channels="RGB",
+            #         output_format="auto",
+            #         image_id=,  # each uploaded file has a file.id
+            #     )
+            # )
 
-    results = np.array(features).reshape(1, -1)
+    with col2:
+        st.markdown('<p style="text-align: center;">Style Reference</p>',unsafe_allow_html=True)
+        if stlye_file is not None:
+            style_img = Image.open(stlye_file)
+            st.image(style_img,width=300)  
 
-    if st.button("Predict"):
+transformed_img = None
 
-        # picklefile = open("emp-model.pkl", "rb")
-        # model = pickle.load(picklefile)
+if st.button("Transform"):
+    if(cont_img is None or style_img is None):
+        st.error("Please upload both the images")
+        st.stop()
+    else:
+        st.warning('Transforming Image')
+        # picklefile = open("vae_model.pkl", "rb")
+        model = style_transfer_functions.VAE()
+        # pickle.load(picklefile)
+        transformed_img = model.transform_image(cont_img, style_img)
+        # picklefile.close()
 
-        prediction = [0]
-        # model.predict(results)
-        if prediction[0] == 0:
-            st.success('Employee will not churn')
-        elif prediction[0] == 1:
-            st.error( 'Employee will churn')
-
+if transformed_img is not None:
+    st.subheader('Transformed Image')
+    st.image(transformed_img,width=300)
