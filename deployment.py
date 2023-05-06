@@ -5,8 +5,9 @@ from  PIL import Image, ImageEnhance
 import pickle
 from streamlit import config
 import style_transfer_functions
+import time
 
-st.set_page_config(page_title="Style Transfer - DLOps", page_icon="😎")
+st.set_page_config(page_title="Style Transfer - DLOps", page_icon="🎭")
 
 model_vae = style_transfer_functions.VAE()
 
@@ -56,6 +57,7 @@ if content_file is not None or stlye_file is not None:
             st.image(style_img,width=300)  
 
 transformed_img = None
+transformation_time = None
 
 if st.button("Transform"):
     if(cont_img is None or style_img is None):
@@ -67,7 +69,11 @@ if st.button("Transform"):
         # pickle.load(picklefile)
         if model!=None:
             with st.spinner("Adding style✨ to you image ..."):
+                t0 = time.time()
                 transformed_img = model.transform_image(cont_img, style_img)
+                t1 = time.time()
+                transformation_time = t1-t0
+
         else:
             st.error("Model not available yet, we're trying our best to get it running..")
         transforming = False
@@ -75,4 +81,4 @@ if st.button("Transform"):
 
 if transformed_img is not None:
     st.subheader('Transformed Image')
-    st.image(transformed_img,width=300)
+    st.image(transformed_img,width=300, caption=f"generated in {transformation_time:.1f} seconds")

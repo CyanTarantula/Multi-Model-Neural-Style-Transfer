@@ -2,8 +2,6 @@ import torch
 import torch.nn.functional as F
 import torchvision.transforms as transforms
 from  PIL import Image, ImageEnhance
-import time
-import os
 import numpy as np
 from Models.ST_VAE.libs.models import encoder4
 from Models.ST_VAE.libs.models import decoder4
