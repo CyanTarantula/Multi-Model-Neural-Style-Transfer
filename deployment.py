@@ -74,9 +74,6 @@ if st.button("Transform"):
         transforming = False
         # picklefile.close()
 
-
-
-
 if transformed_img is not None:
     st.subheader('Transformed Image')
     st.image(transformed_img,width=300)

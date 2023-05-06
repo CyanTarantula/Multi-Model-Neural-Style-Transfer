@@ -22,9 +22,10 @@ class VAE():
         vgg = encoder4()
         dec = decoder4()
         matrix = MulLayer(z_dim=256)
-        vgg.load_state_dict(torch.load("Models/ST_VAE/models/vgg_r41.pth", map_location=torch.device(self.device)))
-        dec.load_state_dict(torch.load("Models/ST_VAE/models/dec_r41.pth", map_location=torch.device(self.device)))
+        vgg.load_state_dict(torch.load(   "Models/ST_VAE/models/vgg_r41.pth", map_location=torch.device(self.device)))
+        dec.load_state_dict(torch.load(   "Models/ST_VAE/models/dec_r41.pth", map_location=torch.device(self.device)))
         matrix.load_state_dict(torch.load("Models/ST_VAE/models/matrix_r41_new.pth", map_location=torch.device(self.device)))
+
         vgg.to(self.device)
         dec.to(self.device)
         matrix.to(self.device)
