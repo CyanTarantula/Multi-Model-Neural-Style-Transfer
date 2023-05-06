@@ -55,11 +55,13 @@ def eval():
     ref_path = os.path.join(opt.image_dataset, 'style')
 
     for cont_file in os.listdir(content_path):
-        if not (cont_file.endswith('.jpg') or not cont_file.endswith('.png')):
+        if not (cont_file.endswith('.jpg') or cont_file.endswith('.png')):
             continue
+
         for ref_file in os.listdir(ref_path):
-            if not (ref_file.endswith('.jpg') or not ref_file.endswith('.png')):
+            if not (ref_file.endswith('.jpg') or ref_file.endswith('.png')):
                 continue
+
             t0 = time.time()
             content = Image.open(os.path.join(content_path, cont_file)).convert('RGB')
             ref = Image.open(os.path.join(ref_path, ref_file)).convert('RGB')
