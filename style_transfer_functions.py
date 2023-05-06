@@ -14,6 +14,7 @@ class VAE():
     def __init__(self):
         self.transform = transforms.Compose([
             transforms.ToTensor(), # range [0, 255] -> [0.0,1.0]
+            transforms.Resize(512),
             transforms.Lambda(lambda x: x[:3])
         ])
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
