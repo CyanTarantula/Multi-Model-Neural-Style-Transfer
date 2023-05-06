@@ -9,6 +9,21 @@ import utils as utils
 
 st.set_page_config(page_title="Style Transfer - DLOps", page_icon="🎭")
 
+st.markdown(
+            f'''
+            <style>
+                .css-1544g2n {{
+                    padding-top: {3}rem;
+                }}
+
+                .css-1y4p8pa {{
+                    padding-top: {2}rem;
+                }}
+            </style>
+            ''',
+            unsafe_allow_html=True,
+)
+
 model_vae = style_transfer_models.VAE()
 model_picsart = style_transfer_models.PicsartAPI()
 
@@ -65,7 +80,7 @@ if content_file is not None or style_file is not None:
 
 
 
-###### IMAGE STYLE TRANSFER  #######
+###### STYLE TRANSFER BUTTON #######
 
 transformed_img = None
 transformation_time = None
@@ -126,6 +141,9 @@ if st.button("Transform", type='primary'):
         # picklefile.close()
 
 
+
+
+###### TRANSFORMED IMAGES #######
 
 if type(transformed_img)==list:
     col1, col2 = st.columns( [0.5, 0.5])
