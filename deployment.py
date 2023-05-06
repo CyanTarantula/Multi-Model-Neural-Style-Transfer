@@ -6,6 +6,8 @@ import pickle
 from streamlit import config
 import style_transfer_functions
 
+model_vae = style_transfer_functions.VAE()
+
 st.sidebar.title("Configurations")
 st.title("Style Transfer using Different Architectures")
 
@@ -16,11 +18,12 @@ with st.sidebar.expander("About the App"):
      """)
 
 st.sidebar.header("Select Model Architecture")
+
 model_options = {
-    'Variational AE': 1,
-    'Tranformer' : 2,
-    'Styl-GAN' : 3,
-    'Pics-Art API' : 4,
+    'Variational AE': model_vae,
+    'Tranformer' : None,
+    'Styl-GAN' : None,
+    'Pics-Art API' : None,
 }
 selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
 
@@ -69,9 +72,12 @@ if st.button("Transform"):
     else:
         st.warning('Transforming Image')
         # picklefile = open("vae_model.pkl", "rb")
-        model = style_transfer_functions.VAE()
+        model = model_options[selected_model]
         # pickle.load(picklefile)
-        transformed_img = model.transform_image(cont_img, style_img)
+        if model!=None:
+            transformed_img = model.transform_image(cont_img, style_img)
+        else:
+            st.error("Model not available yet, we're trying our best to get it running..,")
         # picklefile.close()
 
 if transformed_img is not None:
