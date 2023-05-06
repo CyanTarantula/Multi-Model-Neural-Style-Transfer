@@ -6,6 +6,9 @@ import pickle
 from streamlit import config
 import style_transfer_functions
 import time
+import tempfile
+import pathlib
+import requests
 
 st.set_page_config(page_title="Style Transfer - DLOps", page_icon="🎭")
 
@@ -21,7 +24,7 @@ st.sidebar.header("Select Model Architecture")
 model_options = {
     'Variational AE': model_vae,
     'Tranformer' : None,
-    'Styl-GAN' : None,
+    'Style-GAN' : None,
     'Pics-Art API' : None,
 }
 selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
@@ -36,12 +39,49 @@ output_img_error = None
 
 st.subheader('Upload your Image and Style Reference')
 content_file = st.file_uploader("Image to Style", type=['jpg','png','jpeg'])
-stlye_file = st.file_uploader("Style Reference Image", type=['jpg','png','jpeg'])
+style_file = st.file_uploader("Style Reference Image", type=['jpg','png','jpeg'])
+
+def upload_file(file):
+    url = "https://api.imgur.com/3/image"
+
+    payload={'image': file.read()}
+
+    files=[]
+
+    headers = {
+        'Authorization': 'Client-ID 52d1141cb13f609'
+    }
+
+    response = requests.request("POST", url, headers=headers, data=payload, files=files)
+
+    return response.json()
+
+def delete_file(file_response):
+    url = f"https://api.imgur.com/3/image/{file_response['data']['deletehash']}"
+
+    payload={}
+
+    files=[]
+
+    headers = {
+        'Authorization': 'Client-ID 52d1141cb13f609'
+    }
+
+    response = requests.request("DELETE", url, headers=headers, data=payload, files=files)
+
+    return response.json()
+
+def get_url(file_response):
+    url = file_response['data']['link']
+    url.replace("\\", '')
+    return url
 
 cont_img = None
 style_img = None
 
-if content_file is not None or stlye_file is not None:
+
+
+if content_file is not None or style_file is not None:
     
     col1, col2 = st.columns( [0.5, 0.5])
     with col1:
@@ -52,8 +92,8 @@ if content_file is not None or stlye_file is not None:
 
     with col2:
         st.markdown('<p style="text-align: center;">Style Reference</p>',unsafe_allow_html=True)
-        if stlye_file is not None:
-            style_img = Image.open(stlye_file)
+        if style_file is not None:
+            style_img = Image.open(style_file)
             st.image(style_img,width=300)  
 
 transformed_img = None
@@ -68,7 +108,7 @@ if st.button("Transform"):
         model = model_options[selected_model]
         # pickle.load(picklefile)
         if model!=None:
-            with st.spinner("Adding style✨ to you image ..."):
+            with st.spinner("Adding style✨ to your image ..."):
                 t0 = time.time()
                 transformed_img = model.transform_image(cont_img, style_img)
                 t1 = time.time()
