@@ -3,10 +3,10 @@ import torch.nn.functional as F
 import torchvision.transforms as transforms
 from  PIL import Image, ImageEnhance
 import numpy as np
+import requests
 from Models.ST_VAE.libs.models import encoder4
 from Models.ST_VAE.libs.models import decoder4
 from Models.ST_VAE.libs.Matrix import MulLayer
-
 
 class VAE():
     def __init__(self):
@@ -16,6 +16,7 @@ class VAE():
             transforms.Lambda(lambda x: x[:3])
         ])
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        print(self.device)
 
 
         vgg = encoder4()
@@ -35,7 +36,7 @@ class VAE():
         self.dec = dec
         self.matrix = matrix
 
-    def transform_image(self, content, ref):
+    def transform_image(self, content, ref, *args):
 
         content = self.transform(content).unsqueeze(0).to(self.device)
         ref = self.transform(ref).unsqueeze(0).to(self.device)
@@ -59,3 +60,24 @@ class VAE():
         transformed_img = Image.fromarray(np.uint8(prediction))
         return transformed_img
 
+class PicsartAPI():
+    def __init__(self):
+        self.url = "https://api.picsart.io/tools/1.0/styletransfer"
+        self.files=[]
+        self.headers = {"accept": "application/json", "X-Picsart-API-Key": "ImRHEZp0gqjD7mi6ZRykD1CVToKjnZPc"}
+    
+    def transform_image(self, content, style, content_url, style_url):
+        payload={
+            "reference_image_url": style_url, 
+            "image_url": content_url,
+            # "format": "JPG", 
+            # "output_type": "cutout",
+        }
+
+        response = requests.request("POST", self.url, headers=self.headers, data=payload, files=self.files)
+        # print(response.json())
+
+        transformed_img = None
+        if(response.status_code==200):
+            transformed_img = Image.open(requests.get(response.json()['data']['url'], stream=True).raw)
+        return transformed_img
