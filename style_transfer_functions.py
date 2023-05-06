@@ -23,7 +23,7 @@ class VAE():
         matrix = MulLayer(z_dim=256)
         vgg.load_state_dict(torch.load("Models/ST_VAE/models/vgg_r41.pth", map_location=torch.device('cpu')))
         dec.load_state_dict(torch.load("Models/ST_VAE/models/dec_r41.pth", map_location=torch.device('cpu')))
-        matrix.load_state_dict(torch.load("Models\ST_VAE\models\matrix_r41_new.pth", map_location=torch.device('cpu')))
+        matrix.load_state_dict(torch.load("Models/ST_VAE/models/matrix_r41_new.pth", map_location=torch.device('cpu')))
         vgg.to(device)
         dec.to(device)
         matrix.to(device)
