@@ -7,7 +7,7 @@ def upload_img(img):
     url = "https://api.imgur.com/3/image"
     
     buffered = BytesIO()
-    img.save(buffered, format="JPEG")
+    img.save(buffered, format="PNG")
     img_str = base64.b64encode(buffered.getvalue())
 
 
