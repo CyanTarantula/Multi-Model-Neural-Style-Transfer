@@ -40,7 +40,7 @@ st.sidebar.header("Select Model Architecture")
 model_options = {
     'Variational AE': model_vae,
     'Pics-Art API' : model_picsart,
-    'Transformer' : model_transformer,
+    'Transformer' : None,
     'Compare All'.upper() : "all",
 }
 
@@ -102,7 +102,7 @@ if st.button("Transform", type='primary'):
                 model_names = ['Variational AE', 'Pics-Art API', 'Transformer']
 
                 for i in range(len(model_names)):
-                    print(model_names[i])
+                    # print(model_names[i])
                     _model = model_options[model_names[i]]
                     if _model==None or _model=='all':
                         continue
