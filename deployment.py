@@ -26,6 +26,7 @@ st.markdown(
 
 model_vae = style_transfer_models.VAE()
 model_picsart = style_transfer_models.PicsartAPI()
+model_transformer = style_transfer_models.Transformer()
 
 st.sidebar.title("Configurations")
 st.title("Style Transfer using Different Architectures")
@@ -39,10 +40,10 @@ st.sidebar.header("Select Model Architecture")
 model_options = {
     'Variational AE': model_vae,
     'Pics-Art API' : model_picsart,
-    'Tranformer' : None,
-    'Style-GAN' : None,
+    'Transformer' : model_transformer,
     'Compare All'.upper() : "all",
 }
+
 selected_model = st.sidebar.radio("Models",tuple(model_options.keys()))
 
 with st.sidebar.expander("About the App"):
@@ -77,9 +78,6 @@ if content_file is not None or style_file is not None:
             style_img = Image.open(style_file)
             st.image(style_img,width=300)
 
-
-
-
 ###### STYLE TRANSFER BUTTON #######
 
 transformed_img = None
@@ -92,7 +90,7 @@ if st.button("Transform", type='primary'):
     else:
         model = model_options[selected_model]
         if model=='all':
-            with st.spinner("Styling✨ image with all models..."):
+            with st.spinner("Styling✨ image with all models (can take a few minutes)..."):
                 cont_json = utils.upload_img(cont_img)
                 style_json = utils.upload_img(style_img)
                 cont_url = utils.get_url(cont_json)
@@ -101,15 +99,22 @@ if st.button("Transform", type='primary'):
                 imgs = []
                 times = []
 
-                for model_name in model_options.keys():
-                    _model = model_options[model_name]
+                model_names = ['Variational AE', 'Pics-Art API', 'Transformer']
+
+                for i in range(len(model_names)):
+                    print(model_names[i])
+                    _model = model_options[model_names[i]]
                     if _model==None or _model=='all':
                         continue
                     t0 = time.time()
                     trf_img = _model.transform_image(cont_img, style_img, cont_url, style_url)
                     t1 = time.time()
-                    imgs.append({'name':model_name,'img':trf_img})
+                    imgs.append({'name':model_names[i],'img':trf_img})
                     times.append(t1-t0)
+
+                    if(len(imgs)==2):
+                        transformed_img = imgs
+                        transformation_time = times
                 transformed_img = imgs
                 transformation_time = times
 
@@ -117,7 +122,7 @@ if st.button("Transform", type='primary'):
                 utils.delete_img(style_json)
 
         elif model!=None:
-            with st.spinner("Adding style✨ to your image ..."):
+            with st.spinner("Adding style✨ to your image..."):
                 cont_url = ""
                 style_url = ""
                 if(selected_model[-3:]=='API'):
@@ -140,23 +145,28 @@ if st.button("Transform", type='primary'):
         transforming = False
         # picklefile.close()
 
-
-
-
 ###### TRANSFORMED IMAGES #######
 
 if type(transformed_img)==list:
-    col1, col2 = st.columns( [0.5, 0.5])
-    with col1:
-        st.markdown(f'<p style="text-align: center;">{transformed_img[0]["name"]}</p>',unsafe_allow_html=True)
-        if content_file is not None:
-            st.image(transformed_img[0]['img'],width=300, caption=f"generated in {transformation_time[0]:.1f} seconds")
+        col1, col2 = st.columns( [0.5, 0.5])
+        with col1:
+            if len(transformed_img)>0:
+                st.markdown(f'<p style="text-align: center;">{transformed_img[0]["name"]}</p>',unsafe_allow_html=True)
+                if content_file is not None:
+                    st.image(transformed_img[0]['img'],width=300, caption=f"generated in {transformation_time[0]:.1f} seconds")
 
-    with col2:
-        st.markdown(f'<p style="text-align: center;">{transformed_img[1]["name"]}</p>',unsafe_allow_html=True)
-        if content_file is not None:
-            st.image(transformed_img[1]['img'],width=300, caption=f"generated in {transformation_time[1]:.1f} seconds")
-
+        with col2:
+            if len(transformed_img)>1:
+                st.markdown(f'<p style="text-align: center;">{transformed_img[1]["name"]}</p>',unsafe_allow_html=True)
+                if content_file is not None:
+                    st.image(transformed_img[1]['img'],width=300, caption=f"generated in {transformation_time[1]:.1f} seconds")
+        
+        col3, col4 = st.columns( [0.5, 0.5])
+        with col3:
+            if len(transformed_img)>2:
+                st.markdown(f'<p style="text-align: center;">{transformed_img[2]["name"]}</p>',unsafe_allow_html=True)
+                if content_file is not None:
+                    st.image(transformed_img[2]['img'],width=300, caption=f"generated in {transformation_time[2]:.1f} seconds")
 elif transformed_img is not None:
     st.subheader('Transformed Image')
     st.image(transformed_img,width=300, caption=f"generated in {transformation_time:.1f} seconds")

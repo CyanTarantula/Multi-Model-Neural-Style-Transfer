@@ -1,12 +1,14 @@
 import torch
-import torch.nn.functional as F
 import torchvision.transforms as transforms
-from  PIL import Image, ImageEnhance
+from  PIL import Image
 import numpy as np
 import requests
 from Models.ST_VAE.libs.models import encoder4
 from Models.ST_VAE.libs.models import decoder4
 from Models.ST_VAE.libs.Matrix import MulLayer
+import torch.nn as nn
+import Models.StyTR2.models.transformer as transformer
+import Models.StyTR2.models.StyTR as StyTR
 
 class VAE():
     def __init__(self):
@@ -16,7 +18,7 @@ class VAE():
             transforms.Lambda(lambda x: x[:3])
         ])
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        print(self.device)
+        # print(self.device)
 
 
         vgg = encoder4()
@@ -80,4 +82,104 @@ class PicsartAPI():
         transformed_img = None
         if(response.status_code==200):
             transformed_img = Image.open(requests.get(response.json()['data']['url'], stream=True).raw)
+        return transformed_img
+
+class Transformer():
+    def __init__(self):
+        content_size=512
+        style_size=512
+        crop='store_true'
+
+        device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+        vgg = StyTR.vgg
+        vgg.load_state_dict(torch.load("Models/StyTR2/experiments/vgg_normalised.pth"))
+        vgg = nn.Sequential(*list(vgg.children())[:44])
+
+        decoder = StyTR.decoder
+        Trans = transformer.Transformer()
+        embedding = StyTR.PatchEmbed()
+
+        decoder.eval()
+        Trans.eval()
+        vgg.eval()
+        from collections import OrderedDict
+        new_state_dict = OrderedDict()
+        state_dict = torch.load("Models/StyTR2/experiments/decoder_iter_160000.pth")
+        for k, v in state_dict.items():
+            #namekey = k[7:] # remove `module.`
+            namekey = k
+            new_state_dict[namekey] = v
+        decoder.load_state_dict(new_state_dict)
+
+        new_state_dict = OrderedDict()
+        state_dict = torch.load("Models/StyTR2/experiments/transformer_iter_160000.pth")
+        for k, v in state_dict.items():
+            #namekey = k[7:] # remove `module.`
+            namekey = k
+            new_state_dict[namekey] = v
+        Trans.load_state_dict(new_state_dict)
+
+        new_state_dict = OrderedDict()
+        state_dict = torch.load("Models/StyTR2/experiments/embedding_iter_160000.pth")
+        for k, v in state_dict.items():
+            #namekey = k[7:] # remove `module.`
+            namekey = k
+            new_state_dict[namekey] = v
+        embedding.load_state_dict(new_state_dict)
+
+        network = StyTR.StyTrans(vgg,decoder,embedding,Trans)
+        network.eval()
+        network.to(device)
+
+        self.device = device
+        self.network = network
+
+        self.content_tf = self.test_transform(content_size, crop)
+        self.style_tf = self.test_transform(style_size, crop)
+
+    def test_transform(self, size, crop):
+        transform_list = []
+    
+        if size != 0: 
+            transform_list.append(transforms.Resize(size))
+        if crop:
+            transform_list.append(transforms.CenterCrop(size))
+        transform_list.append(transforms.ToTensor())
+        transform = transforms.Compose(transform_list)
+        return transform
+    def style_transform(self, h,w):
+        k = (h,w)
+        size = int(np.max(k))
+        print(type(size))
+        transform_list = []    
+        transform_list.append(transforms.CenterCrop((h,w)))
+        transform_list.append(transforms.ToTensor())
+        transform = transforms.Compose(transform_list)
+        return transform
+
+    def content_transform(self):
+        
+        transform_list = []   
+        transform_list.append(transforms.ToTensor())
+        transform = transforms.Compose(transform_list)
+        return transform
+    
+    def transform_image(self, content_img, style_img, *args):
+        content_tf1 = self.content_transform()       
+        content = self.content_tf(content_img)
+
+        h,w,c=np.shape(content)    
+        style_tf1 = self.style_transform(h,w)
+        style = self.style_tf(style_img)
+
+
+        style = style.to(self.device).unsqueeze(0)
+        content = content.to(self.device).unsqueeze(0)
+
+        with torch.no_grad():
+            output= self.network(content,style)       
+        output = output[0].cpu()
+        transformed_img = transforms.ToPILImage()(output[0])
+
         return transformed_img
